@@ -68,7 +68,7 @@ def f(x,y,p):
     
     derm= np.zeros(ym.shape)
     for i in range(derm.shape[0]):
-        derm[i,:]= vacuum(ym[i,:], p[0], p[-1], p[-2])
+        derm[i,:]= vacuum(ym[i,:], p[i], p[-1], p[-2])
     
     return array_maker(derm)
 
