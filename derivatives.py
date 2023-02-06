@@ -95,5 +95,52 @@ def array_maker(M):
         for j in range(4):
             array[4*i+j] = M[i,j]
     return array  
-                                         
-                                           
+                           
+    
+@nb.jit(nopython=True)    
+def probability(ym0, Eval, t, y):
+    resultsMatrix= threeD(y)
+    array= dndE(ym0, Eval)
+    initial= n_ve(resultsMatrix[0,:,:], Eval)
+    later= np.zeros(len(t))
+    prob_ve= np.zeros(len(t))
+    
+    for i in range(len(t)):
+        later[i]= n_ve(resultsMatrix[i,:,:], Eval)
+        prob_ve[i]= later[i]/ initial
+    return prob_ve
+
+
+
+@nb.jit(nopython=True) 
+def n_ve(ym0, Eval):
+    array= dndE(ym0, Eval)
+    nve= np.trapz(array, Eval)
+    
+    return nve
+
+
+
+@nb.jit(nopython=True)
+def threeD(y):
+    d= matrix_maker(y[0,:])
+    matrix= np.zeros((y.shape[0], d.shape[0], 4))
+                    
+    for i in range(y.shape[0]):
+        matrix[i,:,:]= matrix_maker(y[i,:])
+    
+    return matrix
+
+
+
+
+@nb.jit(nopython=True)
+def dndE(ym0, Eval):
+    array= np.zeros(len(ym0))
+    for i in range(len(array)):
+        p0= ym0[i,0]
+        E= Eval[i]
+        pz= ym0[i, 3]
+        array[i]= .5* p0*(1+pz)*(E**2/2*np.pi**2)
+        
+    return array
