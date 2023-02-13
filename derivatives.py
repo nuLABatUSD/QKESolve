@@ -63,12 +63,15 @@ def vacuum(y, E, dm2, th):
 
 
 @nb.jit(nopython=True)
-def f(x,y,p):     
+def f(x,y,p):
+    Gf= p[-3]
     ym= matrix_maker(y)
-    
+    N= ym.shape[0]
+    energy= p[:N]
     derm= np.zeros(ym.shape)
+    Vvv= v_function(ym, energy, Gf)
     for i in range(derm.shape[0]):
-        derm[i,:]= vacuum(ym[i,:], p[i], p[-1], p[-2])
+        derm[i,:]= vacuum(ym[i,:], p[i], p[-1], p[-2]) + vv(ym[i,:], Vvv) 
     
     return array_maker(derm)
 
@@ -144,3 +147,28 @@ def dndE(ym0, Eval):
         array[i]= .5* p0*(1+pz)*(E**2/2*np.pi**2)
         
     return array
+
+@nb.jit(nopython=True)
+def v_function(ym, Eval, Gf):
+    v= np.zeros(3)
+    yx= Eval[:]**2*ym[:,0]*ym[:,1]
+    yy= Eval[:]**2*ym[:,0]*ym[:,2]
+    yz= Eval[:]**2*ym[:,0]*ym[:,3]
+    x_integral= np.trapz(yx , Eval)
+    y_integral= np.trapz(yy , Eval)
+    z_integral= np.trapz(yz , Eval)
+    v[0]= ((np.sqrt(2)*Gf)/(2*np.pi**2))*x_integral
+    v[1]= ((np.sqrt(2)*Gf)/(2*np.pi**2))*y_integral
+    v[2]= ((np.sqrt(2)*Gf)/(2*np.pi**2))*z_integral
+    return v
+
+
+@nb.jit(nopython=True)
+def vv(ym, v):
+    der= np.zeros(4)
+    der[0]= 0
+    der[1]= v[1]*ym[3]- v[2]*ym[2]
+    der[2]= v[2]*ym[1]- v[0]*ym[3]
+    der[3]= v[0]*ym[2]- v[1]*ym[1]
+    
+    return der
