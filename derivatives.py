@@ -51,6 +51,9 @@ import numba as nb
     #return der  
 
     
+    
+Gf= 1.1663787*10**-5*(1/(1000**2))
+    
 @nb.jit(nopython=True)                                           
 def vacuum(y, E, dm2, th):
     der= np.zeros(4)
@@ -64,14 +67,14 @@ def vacuum(y, E, dm2, th):
 
 @nb.jit(nopython=True)
 def f(x,y,p):
-    Gf= p[-3]
+    T= p[-3]
     ym= matrix_maker(y)
     N= ym.shape[0]
-    energy= p[:N]
+    energy= p[:N]*T
     derm= np.zeros(ym.shape)
-    Vvv= v_function(ym, energy, Gf)
+    Vvv= v_function(ym, energy)
     for i in range(derm.shape[0]):
-        derm[i,:]= vacuum(ym[i,:], p[i], p[-1], p[-2]) + vv(ym[i,:], Vvv) 
+        derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + vv(ym[i,:], Vvv) 
     
     return array_maker(derm)
 
@@ -149,7 +152,7 @@ def dndE(ym0, Eval):
     return array
 
 @nb.jit(nopython=True)
-def v_function(ym, Eval, Gf):
+def v_function(ym, Eval):
     v= np.zeros(3)
     yx= Eval[:]**2*ym[:,0]*ym[:,1]
     yy= Eval[:]**2*ym[:,0]*ym[:,2]
