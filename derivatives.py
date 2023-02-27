@@ -1,5 +1,6 @@
 import numpy as np
 import numba as nb
+import numpy.polynomial.laguerre as geek
 
 #@nb.jit(nopython=True)
 #def f(x, y, p):
@@ -53,6 +54,7 @@ import numba as nb
     
     
 Gf= 1.1663787*10**-5*(1/(1000**2))
+x, w= geek.laggauss(40)
     
 @nb.jit(nopython=True)                                           
 def vacuum(y, E, dm2, th):
@@ -68,13 +70,15 @@ def vacuum(y, E, dm2, th):
 @nb.jit(nopython=True)
 def f(x,y,p):
     T= p[-3]
+    cT= p[-4]
     ym= matrix_maker(y)
     N= ym.shape[0]
     energy= p[:N]*T
     derm= np.zeros(ym.shape)
-    Vvv= v_function(ym, energy)
+    Vvv= Vvv_function(ym, energy)
+    VT= VT_function(ym, energy, T)
     for i in range(derm.shape[0]):
-        derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + vv(ym[i,:], Vvv) 
+        derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv) + cT*cross_product(ym[i,:], energy[i]*VT)
     
     return array_maker(derm)
 
@@ -152,7 +156,7 @@ def dndE(ym0, Eval):
     return array
 
 @nb.jit(nopython=True)
-def v_function(ym, Eval):
+def Vvv_function(ym, Eval):
     v= np.zeros(3)
     yx= Eval[:]**2*ym[:,0]*ym[:,1]
     yy= Eval[:]**2*ym[:,0]*ym[:,2]
@@ -166,8 +170,54 @@ def v_function(ym, Eval):
     return v
 
 
+
 @nb.jit(nopython=True)
-def vv(ym, v):
+def weight(x, T):
+    u= .510998/T
+    g= ((np.sqrt(x**2+u**2)*x**2*np.exp(x))/(np.exp(np.sqrt(x**2+u**2))+1))
+    return g
+
+    
+    
+    
+@nb.jit(nopython=True)   
+def g(w,x, T):
+    summ= 0
+    for i in range(40):
+        summ= summ+ w[i]*weight(x[i], T)
+    return summ
+
+
+
+
+
+
+
+@nb.jit(nopython=True)
+def VT_function(ym, Eval, T):
+    u= .510998/T
+
+    pepe= (4*T**4)/ (2*np.pi**2)* g(w,x, T)
+    v= np.zeros(3)
+    mw= 80433
+    mz= 91187.6
+    constant1= (16*np.sqrt(2)*Gf)/(3*mw**2)
+    constant2= (8*np.sqrt(2)*Gf)/(3*mz**2)
+    yx= Eval[:]**3*ym[:,0]*ym[:,1]
+    yy= Eval[:]**3*ym[:,0]*ym[:,2]
+    yz= Eval[:]**3*ym[:,0]*ym[:,3]
+    x_integral= np.trapz(yx , Eval)
+    y_integral= np.trapz(yy , Eval)
+    z_integral= np.trapz(yz , Eval)
+    v[0]= constant2*x_integral
+    v[1]= constant2*y_integral
+    v[2]= constant2*z_integral + constant1*pepe
+    
+    return -v
+
+
+@nb.jit(nopython=True)
+def cross_product(ym, v):
     der= np.zeros(4)
     der[0]= 0
     der[1]= v[1]*ym[3]- v[2]*ym[2]
