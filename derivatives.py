@@ -56,7 +56,7 @@ import numpy.polynomial.laguerre as geek
 Gf= 1.1663787*10**-5*(1/(1000**2))
 x, w= geek.laggauss(40)
     
-@nb.jit(nopython=True)                                           
+#@nb.jit(nopython=True)                                           
 def vacuum(y, E, dm2, th):
     der= np.zeros(4)
     der[0] = 0
@@ -67,24 +67,40 @@ def vacuum(y, E, dm2, th):
 
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def f(x,y,p):
-    T= p[-3]
-    cT= p[-4]
-    ym= matrix_maker(y)
-    N= ym.shape[0]
-    energy= p[:N]*T
-    derm= np.zeros(ym.shape)
-    Vvv= Vvv_function(ym, energy)
-    VT= VT_function(ym, energy, T)
-    for i in range(derm.shape[0]):
-        derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv) + cT*cross_product(ym[i,:], energy[i]*VT)
+    if (p[-5] != -1):
+        T= p[-3]
+        cT= p[-4]
+        ym= matrix_maker(y)
+        N= ym.shape[0]
+        energy= p[:N]*T
+        derm= np.zeros(ym.shape)
+        Vvv= Vvv_function(ym, energy)
+        VT= VT_function(ym, energy, T)
+        for i in range(derm.shape[0]):
+               derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv) + cT*cross_product(ym[i,:], energy[i]*VT)
     
-    return array_maker(derm)
+        return array_maker(derm)
+    
+    else:
+        T= p[-3]
+        cT= p[-4]
+        ym, ym_bar= newmatrix_maker(y)
+        N= ym.shape[0]
+        energy= p[:N]*T
+        derm= np.zeros(ym.shape)
+        derm_bar= np.zeros(ym_bar.shape)
+        Vvv_Vvvbar= Vvv_function(ym, energy) - Vvv_function(ym_bar, energy)
+        VT= VT_function(ym, energy, T)
+        for i in range(derm.shape[0]):
+            derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv_Vvvbar) + cT*cross_product(ym[i,:], energy[i]*VT)
+            derm_bar[i,:]= -vacuum(ym_bar[i,:], energy[i], p[-1], p[-2]) + cross_product(ym_bar[i,:], Vvv_Vvvbar) - cT*cross_product(ym_bar[i,:], energy[i]*VT)
+        return newarray_maker(derm, derm_bar)
 
 
 
-@nb.jit(nopython=True)                                         
+#@nb.jit(nopython=True)                                         
 def matrix_maker(y):
     length= len(y)
     matrix = np.zeros((length//4,4))
@@ -96,7 +112,7 @@ def matrix_maker(y):
 
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def array_maker(M):
     length= M.shape[0]
     array = np.zeros(length*4)
@@ -107,7 +123,7 @@ def array_maker(M):
     return array  
                            
     
-@nb.jit(nopython=True)    
+#@nb.jit(nopython=True)    
 def probability(ym0, Eval, t, y):
     resultsMatrix= threeD(y)
     array= dndE(ym0, Eval)
@@ -122,7 +138,7 @@ def probability(ym0, Eval, t, y):
 
 
 
-@nb.jit(nopython=True) 
+#@nb.jit(nopython=True) 
 def n_ve(ym0, Eval):
     array= dndE(ym0, Eval)
     nve= np.trapz(array, Eval)
@@ -131,7 +147,7 @@ def n_ve(ym0, Eval):
 
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def threeD(y):
     d= matrix_maker(y[0,:])
     matrix= np.zeros((y.shape[0], d.shape[0], 4))
@@ -144,7 +160,7 @@ def threeD(y):
 
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def dndE(ym0, Eval):
     array= np.zeros(len(ym0))
     for i in range(len(array)):
@@ -155,7 +171,7 @@ def dndE(ym0, Eval):
         
     return array
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def Vvv_function(ym, Eval):
     v= np.zeros(3)
     yx= Eval[:]**2*ym[:,0]*ym[:,1]
@@ -171,7 +187,7 @@ def Vvv_function(ym, Eval):
 
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def weight(x, T):
     u= .510998/T
     g= ((np.sqrt(x**2+u**2)*x**2*np.exp(x))/(np.exp(np.sqrt(x**2+u**2))+1))
@@ -180,7 +196,7 @@ def weight(x, T):
     
     
     
-@nb.jit(nopython=True)   
+#@nb.jit(nopython=True)   
 def g(w,x, T):
     summ= 0
     for i in range(40):
@@ -193,7 +209,7 @@ def g(w,x, T):
 
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def VT_function(ym, Eval, T):
     u= .510998/T
 
@@ -216,7 +232,7 @@ def VT_function(ym, Eval, T):
     return -v
 
 
-@nb.jit(nopython=True)
+#@nb.jit(nopython=True)
 def cross_product(ym, v):
     der= np.zeros(4)
     der[0]= 0
@@ -225,3 +241,23 @@ def cross_product(ym, v):
     der[3]= v[0]*ym[2]- v[1]*ym[1]
     
     return der
+
+
+
+#@nb.jit(nopython=True)
+def newmatrix_maker(y):
+    N= len(y)// 2
+    Mv= matrix_maker(y[:N])
+    Mv_= matrix_maker(y[N:])
+    return Mv, Mv_
+
+
+
+
+#@nb.jit(nopython=True)
+def newarray_maker(Mv, Mvbar):
+    N= Mv.shape[0]
+    array= np.zeros(8*N)
+    array[:4*N]= array_maker(Mv)
+    array[4*N:]= array_maker(Mvbar)
+    return array
