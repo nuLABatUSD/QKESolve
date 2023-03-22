@@ -19,7 +19,7 @@ def prob_plot(tau,prob_ve):
     
     return
     
-def solve_all_electron_ic(T, incl_thermal_term, incl_anti, foldername, filename_head, overwrite_file = False, make_plot = True, N=100, Emax=10, dm2=dm2_atm, sin22th=sin22th_default):
+def solve_all_electron_ic(T, incl_thermal_term, incl_anti, foldername, filename_head, overwrite_file = False, make_plot = True, N=100, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, print_info=True):
     fn = foldername + '/' + filename_head + '.npz'
     
     if os.path.exists(fn):
@@ -68,7 +68,7 @@ def solve_all_electron_ic(T, incl_thermal_term, incl_anti, foldername, filename_
         'N': N,
         'eps_max': Emax,
         'delta m-squared': dm2,
-        'sin2 (2th)': sin22th,
+        'sin^2 (2theta)': sin22th,
         'T':T
     }    
     
@@ -91,7 +91,8 @@ def solve_all_electron_ic(T, incl_thermal_term, incl_anti, foldername, filename_
 
     raw_data_dict = {
         'time': t,
-        'dt': dx
+        'dt': dx,
+        'dN' : dN
     }
     
     tau = t * (dm2 / (2 * 2.2 * T))
@@ -138,4 +139,8 @@ def solve_all_electron_ic(T, incl_thermal_term, incl_anti, foldername, filename_
     
     np.savez(fn, settings=settings_dict, raw=raw_data_dict, prob = probability_data)
 
-    
+    if print_info:
+        print("Data saved to file " + fn)
+        print("{} time steps saved with dN = {}".format(len(t), dN))
+        for i in settings_dict:
+            print(i, settings_dict[i])
