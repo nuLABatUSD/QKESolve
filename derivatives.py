@@ -81,7 +81,7 @@ def f(x,y,p):
         Vvv= Vvv_function(ym, energy)
         VT= VT_function(ym, energy, T)
         for i in range(derm.shape[0]):
-               derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv) + cT*cross_product(ym[i,:], energy[i]*VT) + C[i,:] - C_scat(C, ym)
+               derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv) + cT*cross_product(ym[i,:], energy[i]*VT) + ym[i, 0]*C[i,:] - C_scat(C, ym)*(1/ym[i,0])
     
         return array_maker(derm)
     
@@ -90,14 +90,18 @@ def f(x,y,p):
         cT= p[-4]
         ym, ym_bar= newmatrix_maker(y)
         N= ym.shape[0]
+        D= np.zeros((N,4))
+        D= scattering(ym_bar, p)
+        C= np.zeros((N,4))
+        C= scattering(ym, p)
         energy= p[:N]*T
         derm= np.zeros(ym.shape)
         derm_bar= np.zeros(ym_bar.shape)
         Vvv_Vvvbar= Vvv_function(ym, energy) - Vvv_function(ym_bar, energy)
         VT= VT_barfunction(ym, ym_bar, energy, T)
         for i in range(derm.shape[0]):
-            derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv_Vvvbar) + cT*cross_product(ym[i,:], energy[i]*VT)
-            derm_bar[i,:]= -vacuum(ym_bar[i,:], energy[i], p[-1], p[-2]) + cross_product(ym_bar[i,:], Vvv_Vvvbar) - cT*cross_product(ym_bar[i,:], energy[i]*VT)
+            derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv_Vvvbar) + cT*cross_product(ym[i,:], energy[i]*VT) + ym[i, 0]*C[i,:] - C_scat(C, ym)*(1/ym[i,0])
+            derm_bar[i,:]= -vacuum(ym_bar[i,:], energy[i], p[-1], p[-2]) + cross_product(ym_bar[i,:], Vvv_Vvvbar) - cT*cross_product(ym_bar[i,:], energy[i]*VT) + ym_bar[i, 0]*D[i,:] - C_scat(D, ym_bar)*(1/ym_bar[i,0])
         return newarray_maker(derm, derm_bar)
 
 
@@ -292,8 +296,9 @@ def newarray_maker(Mv, Mvbar):
 
 @nb.jit(nopython=True)
 def scattering(ym ,p):
+    T= p[-3]
     N= ym.shape[0]
-    Eval= p[:N]
+    Eval= p[:N]*T
     T= p[-3]
     C= np.zeros((N,4))
     for i in range(len(C)):
