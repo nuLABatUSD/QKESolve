@@ -110,7 +110,7 @@ def f(x,y,p):
             D = np.zeros((N,4))
 
             Cs = np.zeros((N,4))
-            Ds_bar = np.zeros((N,4))
+            Cs_bar = np.zeros((N,4))
         for i in range(derm.shape[0]):
             derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv_Vvvbar) + cT*cross_product(ym[i,:], energy[i]*VT) + (1/ym[i, 0])*C[i,:] - Cs[i, :]*(1/ym[i,0])
             derm_bar[i,:]= -vacuum(ym_bar[i,:], energy[i], p[-1], p[-2]) + cross_product(ym_bar[i,:], Vvv_Vvvbar) - cT*cross_product(ym_bar[i,:], energy[i]*VT) + (1/ym_bar[i, 0])*D[i,:] - Cs_bar[i, :]*(1/ym_bar[i,0])
