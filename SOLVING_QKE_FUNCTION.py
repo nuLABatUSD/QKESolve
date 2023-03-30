@@ -6,8 +6,6 @@ import derivatives as der
 import os
 
 
-
-
 dm2_atm = 2.5e-15
 sin22th_default = 0.8
 
@@ -21,7 +19,7 @@ def prob_plot(tau,prob_ve):
     
     return
     
-def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, overwrite_file = False, make_plot = True, N=100, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, print_info=True):
+def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, print_info=True):
     fn = foldername + '/' + filename_head + '.npz'
     
     if os.path.exists(fn):
@@ -29,6 +27,11 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, ov
             print("File : {} already exists.  Abort".format(fn))
             
             return
+        
+    if incl_anti:
+        N = len(y0) // 8
+    else:
+        N = len(y0) // 4
             
     if not os.path.isdir(foldername):
         os.mkdir(foldername)
@@ -38,7 +41,7 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, ov
     Eval = np.linspace(Emax/N, Emax, N)
 
         
-    p= np.zeros(N+5)
+    p= np.zeros(N+6)
     p[-1]= dm2
     p[-2]= th
     p[:N]= np.linspace(Emax/N, Emax, N)
@@ -49,16 +52,16 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, ov
         
     if incl_anti:
         p[-5] = -1
-
-            
     else:
         p[-5] = 0
 
+    if incl_collisions:
+        p[-6] = -1
         
     settings_dict = {
-        'initial array': y0,
         'incl_thermal_term':incl_thermal_term,
         'incl_anti_neutrinos':incl_anti,
+        'incl_collisions':incl_collisions,
         'N': N,
         'eps_max': Emax,
         'delta m-squared': dm2,
@@ -84,6 +87,7 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, ov
         t, y, dx, end = ODE.ODEOneRun(t0, y0, dt0, p, N_step, dN, t_final)
 
     raw_data_dict = {
+        'initial array': y0,
         'time': t,
         'dt': dx,
         'dN' : dN
@@ -97,12 +101,15 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, ov
     if incl_anti:
         nu_3d_matrix = der.threeD(y[:,:4*N])
         nubar_3d_matrix = der.threeD(y[:,4*N:])
-
+                
         raw_data_dict['nu3D'] = nu_3d_matrix
         raw_data_dict['nubar3D'] = nubar_3d_matrix
         
         ym0, ym0_bar= der.newmatrix_maker(y0)
         
+        raw_data_dict['nu_init matrix'] = ym0
+        raw_data_dict['nu_bar_init matrix'] = ym0_bar
+
         try:
             prob_ve = der.probability(ym0, Eval, t, y[:,:4*N])
             
@@ -125,9 +132,13 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, ov
     else:
         nu_3d_matrix = der.threeD(y)
         
+        
         raw_data_dict['nu3D'] = nu_3d_matrix
         
         ym0= der.matrix_maker(y0)
+        
+        raw_data_dict['nu_init matrix'] = ym0
+
         prob_ve = der.probability(ym0, Eval, t, y)
         probability_data['prob_ve'] = prob_ve
         

@@ -74,15 +74,18 @@ def f(x,y,p):
         cT= p[-4]
         ym= matrix_maker(y)
         N= ym.shape[0]
-        C= np.zeros((N,4))
-        C= scattering(ym, p)
         energy= p[:N]*T
         derm= np.zeros(ym.shape)
         Vvv= Vvv_function(ym, energy)
         VT= VT_function(ym, energy, T)
-        Cs= C_scat(C, ym)
+        if (p[-6] == -1):
+            C= scattering(ym, p)
+            Cs= C_scat(C, ym)
+        else:
+            C= np.zeros((N,4))
+            Cs = np.zeros((N,4))
         for i in range(derm.shape[0]):
-               derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv) + cT*cross_product(ym[i,:], energy[i]*VT) + ym[i, 0]*C[i,:] - Cs[i, :]*(1/ym[i,0])
+               derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv) + cT*cross_product(ym[i,:], energy[i]*VT) + (1/ym[i, 0])*C[i,:] - Cs[i, :]*(1/ym[i,0])
     
         return array_maker(derm)
     
@@ -91,20 +94,26 @@ def f(x,y,p):
         cT= p[-4]
         ym, ym_bar= newmatrix_maker(y)
         N= ym.shape[0]
-        D= np.zeros((N,4))
-        D= scattering(ym_bar, p)
-        C= np.zeros((N,4))
-        C= scattering(ym, p)
         energy= p[:N]*T
         derm= np.zeros(ym.shape)
         derm_bar= np.zeros(ym_bar.shape)
         Vvv_Vvvbar= Vvv_function(ym, energy) - Vvv_function(ym_bar, energy)
         VT= VT_barfunction(ym, ym_bar, energy, T)
-        Cs= C_scat(C, ym)
-        Cs_bar= C_scat(D, ym_bar)
+        if (p[-6] == -1):
+            C= scattering(ym, p)
+            D= scattering(ym_bar, p)
+
+            Cs= C_scat(C, ym)
+            Cs_bar= C_scat(D, ym_bar)
+        else:
+            C= np.zeros((N,4))
+            D = np.zeros((N,4))
+
+            Cs = np.zeros((N,4))
+            Ds_bar = np.zeros((N,4))
         for i in range(derm.shape[0]):
-            derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv_Vvvbar) + cT*cross_product(ym[i,:], energy[i]*VT) + ym[i, 0]*C[i,:] - Cs[i, :]*(1/ym[i,0])
-            derm_bar[i,:]= -vacuum(ym_bar[i,:], energy[i], p[-1], p[-2]) + cross_product(ym_bar[i,:], Vvv_Vvvbar) - cT*cross_product(ym_bar[i,:], energy[i]*VT) + ym_bar[i, 0]*D[i,:] - Cs_bar[i, :]*(1/ym_bar[i,0])
+            derm[i,:]= vacuum(ym[i,:], energy[i], p[-1], p[-2]) + cross_product(ym[i,:], Vvv_Vvvbar) + cT*cross_product(ym[i,:], energy[i]*VT) + (1/ym[i, 0])*C[i,:] - Cs[i, :]*(1/ym[i,0])
+            derm_bar[i,:]= -vacuum(ym_bar[i,:], energy[i], p[-1], p[-2]) + cross_product(ym_bar[i,:], Vvv_Vvvbar) - cT*cross_product(ym_bar[i,:], energy[i]*VT) + (1/ym_bar[i, 0])*D[i,:] - Cs_bar[i, :]*(1/ym_bar[i,0])
         return newarray_maker(derm, derm_bar)
 
 
@@ -310,7 +319,7 @@ def scattering(ym ,p):
         cy= (-1/2)*(1/3.15)*Gf**2*T**4*Eval[i]*.54598*ym[i,0]*ym[i,2]
         cz= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- 1/(np.exp(Eval[i])+1)))-(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- 1/(np.exp(Eval[i])+1)))
     
-        C[i,:]= [c0,cx,cy,cz]
+        C[i,:]= [c0*ym[i,0],cx,cy,cz]
     return C
 
 
