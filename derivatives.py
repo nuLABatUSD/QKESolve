@@ -304,7 +304,9 @@ def newarray_maker(Mv, Mvbar):
     return array
 
 
-
+@nb.jit(nopython=True)
+def feq(Energy, Temperature, eta = 0):
+    return 1/(np.exp(Energy/Temperature-eta)+1)
 
 @nb.jit(nopython=True)
 def scattering(ym ,p):
@@ -314,10 +316,12 @@ def scattering(ym ,p):
     T= p[-3]
     C= np.zeros((N,4))
     for i in range(len(C)):
-        c0= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- 1/(np.exp(Eval[i])+1)))+(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- 1/(np.exp(Eval[i])+1)))
+        c0= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- feq(Eval[i],T)))+(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- feq(Eval[i],T)))
+#        c0= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- 1/(np.exp(Eval[i])+1)))+(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- 1/(np.exp(Eval[i])+1)))
         cx= (-1/2)*(1/3.15)*Gf**2*T**4*Eval[i]*.54598*ym[i,0]*ym[i,1]
         cy= (-1/2)*(1/3.15)*Gf**2*T**4*Eval[i]*.54598*ym[i,0]*ym[i,2]
-        cz= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- 1/(np.exp(Eval[i])+1)))-(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- 1/(np.exp(Eval[i])+1)))
+        cz= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- feq(Eval[i],T)))-(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- feq(Eval[i],T)))
+#        cz= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- 1/(np.exp(Eval[i])+1)))-(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- 1/(np.exp(Eval[i])+1)))
     
         C[i,:]= [c0*ym[i,0],cx,cy,cz]
     return C
