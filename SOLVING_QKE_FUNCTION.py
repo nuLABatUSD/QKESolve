@@ -19,7 +19,7 @@ def prob_plot(tau,prob_ve):
     
     return
     
-def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, print_info=True):
+def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, tau_final = 10, print_info=True, use_fixed_dN = False, dN_fixed = 5, N_fixed = 1000):
     fn = foldername + '/' + filename_head + '.npz'
     
     if os.path.exists(fn):
@@ -74,13 +74,17 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, in
 
     N_step = 1000
     dN = 5
-    tau_final=10
+    
+    if use_fixed_dN:
+        dN = dN_fixed
+        N_step = N_fixed
+    #tau_final=10
     t_final = tau_final*2*2.2*T/dm2
 
     t, y, dx, end = ODE.ODEOneRun(t0, y0, dt0, p, N_step, dN, t_final)
     
     
-    if not end:
+    if not end and not use_fixed_dN:
         dN *= np.ceil(t_final/t[-1]) + 1
         dN = int(dN)
         
