@@ -79,7 +79,10 @@ def f(x,y,p):
         Vvv= Vvv_function(ym, energy)
         VT= VT_function(ym, energy, T)
         if (p[-6] == -1):
-            C= scattering(ym, p)
+            if (p[-7] == -1):
+                C = scattering(ym, p, p[-8], p[-9])
+            else:
+                C= scattering(ym, p)
             Cs= C_scat(C, ym)
         else:
             C= np.zeros((N,4))
@@ -100,8 +103,12 @@ def f(x,y,p):
         Vvv_Vvvbar= Vvv_function(ym, energy) - Vvv_function(ym_bar, energy)
         VT= VT_barfunction(ym, ym_bar, energy, T)
         if (p[-6] == -1):
-            C= scattering(ym, p)
-            D= scattering(ym_bar, p)
+            if p[-7] == -1:
+                C = scattering(ym, p, p[-8], p[-9])
+                D = scattering(ym_bar, p, -p[-8], -p[-9])
+            else:
+                C= scattering(ym, p)
+                D= scattering(ym_bar, p)
 
             Cs= C_scat(C, ym)
             Cs_bar= C_scat(D, ym_bar)
@@ -309,18 +316,21 @@ def feq(Energy, Temperature, eta = 0):
     return 1/(np.exp(Energy/Temperature-eta)+1)
 
 @nb.jit(nopython=True)
-def scattering(ym ,p):
+def scattering(ym ,p, eta_e = 0, eta_mu = 0):
     T= p[-3]
     N= ym.shape[0]
     Eval= p[:N]*T
-    T= p[-3]
     C= np.zeros((N,4))
+    
+    fe_eq = feq(Eval, T, eta_e)
+    fm_eq = feq(Eval, T, eta_mu)
+
     for i in range(len(C)):
-        c0= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- feq(Eval[i],T)))+(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- feq(Eval[i],T)))
+        c0= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- fe_eq[i]))+(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- fm_eq[i]))
 #        c0= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- 1/(np.exp(Eval[i])+1)))+(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- 1/(np.exp(Eval[i])+1)))
         cx= (-1/2)*(1/3.15)*Gf**2*T**4*Eval[i]*.54598*ym[i,0]*ym[i,1]
         cy= (-1/2)*(1/3.15)*Gf**2*T**4*Eval[i]*.54598*ym[i,0]*ym[i,2]
-        cz= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- feq(Eval[i],T)))-(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- feq(Eval[i],T)))
+        cz= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- fe_eq[i]))-(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- fm_eq[i]))
 #        cz= (-1.27*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1+ym[i,3])- 1/(np.exp(Eval[i])+1)))-(-.92*Gf**2*T**4*Eval[i]*(.5*ym[i,0]*(1-ym[i,3])- 1/(np.exp(Eval[i])+1)))
     
         C[i,:]= [c0*ym[i,0],cx,cy,cz]

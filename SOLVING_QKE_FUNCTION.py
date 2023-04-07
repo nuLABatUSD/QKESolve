@@ -19,7 +19,7 @@ def prob_plot(tau,prob_ve):
     
     return
     
-def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, tau_final = 10, print_info=True, use_fixed_dN = False, dN_fixed = 5, N_fixed = 1000):
+def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, incl_eta = False, eta_e = 0, eta_mu = 0, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, tau_final = 10, print_info=True, use_fixed_dN = False, dN_fixed = 5, N_fixed = 1000):
     fn = foldername + '/' + filename_head + '.npz'
     
     if os.path.exists(fn):
@@ -41,7 +41,7 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, in
     Eval = np.linspace(Emax/N, Emax, N)
 
         
-    p= np.zeros(N+6)
+    p= np.zeros(N+9)
     p[-1]= dm2
     p[-2]= th
     p[:N]= np.linspace(Emax/N, Emax, N)
@@ -58,10 +58,20 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, in
     if incl_collisions:
         p[-6] = -1
         
+    if incl_eta:
+        p[-7] = -1
+        p[-8] = eta_e
+        p[-9] = eta_mu
+    else:
+        p[-7] = 0
+        
     settings_dict = {
         'incl_thermal_term':incl_thermal_term,
         'incl_anti_neutrinos':incl_anti,
         'incl_collisions':incl_collisions,
+        'incl_eta':incl_eta,
+        'eta_e':eta_e,
+        'eta_mu':eta_mu,
         'N': N,
         'eps_max': Emax,
         'delta m-squared': dm2,
