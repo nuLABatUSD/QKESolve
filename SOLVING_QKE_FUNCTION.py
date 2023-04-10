@@ -19,14 +19,14 @@ def prob_plot(tau,prob_ve):
     
     return
     
-def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, incl_eta = False, eta_e = 0, eta_mu = 0, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, tau_final = 10, print_info=True, use_fixed_dN = False, dN_fixed = 5, N_fixed = 1000, dt_init = -1, t0 = 0):
+def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, incl_eta = False, eta_e = 0, eta_mu = 0, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, tau_final = 10, print_info=True, use_fixed_dN = False, dN_fixed = 5, N_fixed = 1000, dt_init = -1, t0 = 0, return_final_state = False):
     fn = foldername + '/' + filename_head + '.npz'
     
     if os.path.exists(fn):
         if not overwrite_file:
             print("File : {} already exists.  Abort".format(fn))
             
-            return
+    
         
     if incl_anti:
         N = len(y0) // 8
