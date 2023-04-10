@@ -19,7 +19,7 @@ def prob_plot(tau,prob_ve):
     
     return
     
-def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, incl_eta = False, eta_e = 0, eta_mu = 0, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, tau_final = 10, print_info=True, use_fixed_dN = False, dN_fixed = 5, N_fixed = 1000):
+def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, incl_eta = False, eta_e = 0, eta_mu = 0, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, tau_final = 10, print_info=True, use_fixed_dN = False, dN_fixed = 5, N_fixed = 1000, dt_init = -1, t0 = 0):
     fn = foldername + '/' + filename_head + '.npz'
     
     if os.path.exists(fn):
@@ -79,8 +79,11 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, in
         'T':T
     }    
     
-    t0= 0
-    dt0=  0.01/np.max(np.abs(der.f(t0,y0,p)))
+    #t0= 0
+    if dt_init > 0:
+        dt0 = dt_init
+    else:
+        dt0=  0.01/np.max(np.abs(der.f(t0,y0,p)))
 
     N_step = 1000
     dN = 5
@@ -95,7 +98,7 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, in
     
     
     if not end and not use_fixed_dN:
-        dN *= np.ceil(t_final/t[-1]) + 1
+        dN *= np.ceil((t_final-t0)/(t[-1]-t0)) + 1
         dN = int(dN)
         
         t, y, dx, end = ODE.ODEOneRun(t0, y0, dt0, p, N_step, dN, t_final)
@@ -166,4 +169,7 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, in
         print("{} time steps saved with dN = {}".format(len(t), dN))
         for i in settings_dict:
             print(i, settings_dict[i])
+            
+    if return_final_state:
+        return t[-1], dx[-1], y[-1,:]
 
