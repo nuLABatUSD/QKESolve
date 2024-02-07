@@ -129,6 +129,7 @@ def Fvvsc_components_term2(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4):
 ######## it does this by taking in those 4 arrays corresponding to 4 matrices
 ######## and then it uses Fvvsc_components_term1 and Fvvsc_components_term2 
 ######## to output the full array/vector representatation of the full Fvvsc term
+####### the outputs should all be real
 @nb.jit(nopython=True)
 def Fvvsc_components(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4):
     term1 = Fvvsc_components_term1(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4)
