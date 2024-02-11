@@ -107,6 +107,8 @@ def F_components_term2(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4):
 @nb.jit(nopython=True)
 def Fvvsc_components_term1(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4):
     f0xyz = F_components_term1(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4)
+    return 2 * np.real(f0xyz)
+#### Return a real array, instead of a complex one
     f0xyz_conj = np.conjugate(f0xyz)
     Re_f0xyz = f0xyz + f0xyz_conj
     return Re_f0xyz
@@ -118,6 +120,8 @@ def Fvvsc_components_term1(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4):
 @nb.jit(nopython=True)
 def Fvvsc_components_term2(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4):
     f0xyz = F_components_term2(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4)
+    return 2 * np.real(f0xyz)
+#### Return a real array, instead of a complex one
     f0xyz_conj = np.conjugate(f0xyz)
     Re_f0xyz = f0xyz + f0xyz_conj
     return Re_f0xyz
@@ -134,4 +138,4 @@ def Fvvsc_components_term2(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4):
 def Fvvsc_components(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4):
     term1 = Fvvsc_components_term1(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4)
     term2 = Fvvsc_components_term2(p0xyz_1, p0xyz_2, p0xyz_3, p0xyz_4)
-    return term1 + term2
+    return term1 - term2
