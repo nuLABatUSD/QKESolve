@@ -2,13 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import ODESolve as ODE
 import derivatives as der
+import time
 
 import os
 
 
 dm2_atm = 2.5e-15
 sin22th_default = 0.8
+mpl = 1.221e22
 
+gss = np.loadtxt("SMgstar.dat", usecols=(0,1,2), unpack=True)
+
+def Hubble(T):
+    index = np.where(gss[0] < T)[0][-1]
+    rho = np.pi**2 * T**4 / 30 * gss[1][index]
+    H2 = 8 * np.pi / 3 / mpl**2 * rho
+    return np.sqrt(H2)
 
 def prob_plot(tau,prob_ve):
     plt.figure()
@@ -19,7 +28,7 @@ def prob_plot(tau,prob_ve):
     
     return
     
-def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, incl_eta = False, eta_e = 0, eta_mu = 0, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, tau_final = 10, print_info=True, use_fixed_dN = False, dN_fixed = 5, N_fixed = 1000, dt_init = -1, t0 = 0, return_final_state = False):
+def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, incl_collisions = True, incl_eta = False, eta_e = 0, eta_mu = 0, overwrite_file = False, make_plot = True, Emax=10, dm2=dm2_atm, sin22th=sin22th_default, tau_final = 10, print_info=True, use_fixed_dN = False, dN_fixed = 5, N_fixed = 1000, dt_init = -1, t0 = 0, return_final_state = False, use_max_run_time = False, max_hours = 12, use_Ht = False, Ht_max = 0.01):
     fn = foldername + '/' + filename_head + '.npz'
     
     if os.path.exists(fn):
@@ -93,19 +102,34 @@ def solve_QKE(T, y0, incl_thermal_term, incl_anti, foldername, filename_head, in
         N_step = N_fixed
     #tau_final=10
     t_final = tau_final*2*2.2*T/dm2
+    
+    if use_max_run_time or use_Ht:
+        H = Hubble(T)
+        t_final = max(t_final, Ht_max / H)
+        
 
+    begin_time = time.time()
     t, y, dx, end = ODE.ODEOneRun(t0, y0, dt0, p, N_step, dN, t_final)
+    while_run = 1
+    while use_max_run_time and (time.time() - begin_time) < 120:
+        t, y, dx, end = ODE.ODEOneRun(t[-1], y[-1,:], dx[-1], p, N_step, dN, t_final)
+        while_run += 1
+    total_time = time.time() - begin_time
     
     
     if not end and not use_fixed_dN:
-        dN *= np.ceil((t_final-t0)/(t[-1]-t0)) + 1
+        mf = min(np.ceil(while_run * (t_final-t0)/(t[-1]-t0)) + 1, while_run * max_hours * 3600 / total_time + 1)
+        dN *= mf
         dN = int(dN)
         
+        #print(mf, dN, t_final)
+        #return
         t, y, dx, end = ODE.ODEOneRun(t0, y0, dt0, p, N_step, dN, t_final)
 
     raw_data_dict = {
         'initial array': y0,
         'time': t,
+        'Ht': Hubble(T) * t,
         'dt': dx,
         'dN' : dN
     }
