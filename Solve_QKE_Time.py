@@ -255,7 +255,6 @@ def solve_QKE_time(T, y0, incl_thermal_term, incl_anti, foldername, filename_hea
             
                 if save_verbose:
                     print("Run {} of {}, elapsed time {:.2f} hrs (time for run {:.1f} min)".format(i+1,num_save_files, np.sum(time_array)/3600, time_array[i]/60))
-                    print(len(t))
 
     if progress_saves:
         dN *= num_save_files
