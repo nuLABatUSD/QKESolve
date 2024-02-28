@@ -50,7 +50,7 @@ if os.path.exists("{}-Collision.npz".format(output_filename)):
     print("Output file already exists. Abort.")
     run_ok = False
 
-def calc_c_i(i, CC):
+def calc_c_i(i):
     return Ivvsc.C_Ivvsc(nu3D[i,:,:], p, e_max, B, delta_p), Ivvsc.C_Ivvsc(nubar3D[i,:,:], p, e_max, B, delta_p)
 #    CC[i, :, :] = Ivvsc.C_Ivvsc(nu3D[i,:,:], p, e_max, B, delta_p)
 #    return
